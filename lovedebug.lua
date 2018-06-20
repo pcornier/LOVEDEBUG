@@ -108,6 +108,25 @@ _Debug.lineInfo = function(str)
 	return err, index
 end
 
+local major, minor, revision, codename = love.getVersion()
+_Debug.setColor = function(r, g, b, a)
+  if type(r) == "table" then r, g, b, a = unpack(r) end
+  a = a or 1
+  if r <= 1 and g <= 1 and b <= 1 and a <= 1 then
+    if major >= 11 then
+      love.graphics.setColor(r, g, b, a)
+    else
+      love.graphics.setColor(255 * r, 255 * g, 255 * b, 255 * a)
+    end
+  else
+    if major >= 11 then
+      love.graphics.setColor(r/255, g/255, b/255, a/255)
+    else
+      love.graphics.setColor(r, g, b, a)
+    end
+  end
+end
+
 
 --On Top drawer
 _Debug.onTop = function()
@@ -128,20 +147,20 @@ _Debug.onTop = function()
 		end
 	end
 	if #p > 0 then
-		love.graphics.setColor(127, 127, 127, 255)
+		_Debug.setColor(127, 127, 127, 255)
 		love.graphics.rectangle('fill', 0, 0, love.graphics.getWidth()/2, 2)
 	end
 	if #e > 0 then
-		love.graphics.setColor(255, 0, 0, 255)
+		_Debug.setColor(255, 0, 0, 255)
 		love.graphics.rectangle('fill', love.graphics.getWidth()/2, 0, love.graphics.getWidth()/2, 2)
 	end
 
 	if p then
 		--draw prints
 		love.graphics.setScissor(0,0,love.graphics.getWidth()/2,2+ 5*((#p-1) > -1 and #p-1 or 0) + #p*_Debug.Font:getHeight())
-		love.graphics.setColor(127, 127, 127, 64)
+		_Debug.setColor(127, 127, 127, 64)
 		love.graphics.rectangle('fill',0,1,love.graphics.getWidth()/2,2+ 5*((#p-1) > -1 and #p-1 or 0) + #p*_Debug.Font:getHeight())
-		love.graphics.setColor(255, 255, 255, 255)
+		_Debug.setColor(255, 255, 255, 255)
 		for i,v in ipairs(p) do
 			love.graphics.print(v[1], 5, 2+ 5*(i-1) + (i-1)*_Debug.Font:getHeight())
 		end
@@ -149,15 +168,15 @@ _Debug.onTop = function()
 	if e then
 		--draw errors
 		love.graphics.setScissor(love.graphics.getWidth()/2,0,love.graphics.getWidth()/2,2+ 5*((#e-1) > -1 and #e-1 or 0) + #e*_Debug.Font:getHeight())
-		love.graphics.setColor(255, 0, 0, 64)
+		_Debug.setColor(255, 0, 0, 64)
 		love.graphics.rectangle('fill',love.graphics.getWidth()/2,1,love.graphics.getWidth()/2,2+ 5*((#e-1) > -1 and #e-1 or 0) + #e*_Debug.Font:getHeight())
-		love.graphics.setColor(255, 255, 255, 255)
+		_Debug.setColor(255, 255, 255, 255)
 		for i,v in ipairs(e) do
 			love.graphics.print(v[1], love.graphics.getWidth()/2+5, 2+ 5*(i-1) + (i-1)*_Debug.Font:getHeight())
 		end
 	end
 	love.graphics.setScissor()
-	love.graphics.setColor(r, g, b, a)
+	_Debug.setColor(r, g, b, a)
 	if font then love.graphics.setFont(font) end
 	love.graphics.pop()
 end
@@ -188,9 +207,9 @@ _Debug.overlay = function()
 	local w = love.graphics.getWidth()
 	local h = love.graphics.getHeight()
 	local R, G, B = unpack(_DebugSettings.OverlayColor)
-	love.graphics.setColor(R, G, B, 220)
+	_Debug.setColor(R, G, B, 220)
 	love.graphics.rectangle("fill", 0, 0, w, h)
-	love.graphics.setColor(255, 255, 255)
+	_Debug.setColor(255, 255, 255)
 	love.graphics.setFont(_Debug.Font)
 	local count = 0
 	local cutY = 0
@@ -219,11 +238,11 @@ _Debug.overlay = function()
 		local err, index = _Debug.lineInfo(v) --Obtain message and type
 		local msg = err and _Debug.errors[index] or _Debug.prints[index]
 		if err then --Add a red and fancy prefix
-			love.graphics.setColor(255, 0, 0)
+			_Debug.setColor(255, 0, 0)
 			love.graphics.print("[Error]", x, y)
 			x = 50
 		end
-		love.graphics.setColor(255, 255, 255)
+		_Debug.setColor(255, 255, 255)
 		love.graphics.print(msg, x, y)
 	end
 	love.graphics.setScissor()
@@ -235,16 +254,16 @@ _Debug.overlay = function()
 	if #_Debug.Proposals > 0 then
 		autocomplete_width = _Debug.Font:getWidth(_Debug.Proposals[_Debug.proposaltoenter])
 		local proposal_prefix_width = _Debug.Font:getWidth(_Debug.Proposal_String)
-		love.graphics.setColor(127, 127, 127)
+		_Debug.setColor(127, 127, 127)
 		love.graphics.print(_Debug.Proposals[_Debug.proposaltoenter], 20 + input_prefix_width, h - 27)
-		love.graphics.setColor(70, 70, 70)
+		_Debug.setColor(70, 70, 70)
 		for i = math.max(_Debug.proposaltoenter - 1, 1), math.min(_Debug.proposaltoenter + 1, #_Debug.Proposals) do
 			if i ~= _Debug.proposaltoenter then
 				local index = i - _Debug.proposaltoenter
 				love.graphics.print(_Debug.Proposal_String .. _Debug.Proposals[i], 20 + input_prefix_width - proposal_prefix_width, h - 27 - (fontSize - 1) * index)
 			end
 		end
-		love.graphics.setColor(255, 255, 255)
+		_Debug.setColor(255, 255, 255)
 	end
 	if _Debug.drawTick then
 		love.graphics.print("_", 20 + input_prefix_width, h - 27)
@@ -255,7 +274,7 @@ _Debug.overlay = function()
 		love.graphics.setFont(_Debug.BigFont)
 		love.graphics.print("...", w - 30, h - 30)
 	end
-	love.graphics.setColor(r, g, b, a)
+	_Debug.setColor(r, g, b, a)
 	if font then love.graphics.setFont(font) end
 	_Debug.lastCut = cutY
 	_Debug.lastH = h
@@ -813,26 +832,3 @@ _G["love"].run = function()
 
 end
 
--- modified version of love.graphics.setColor() for Love >= 11
-local major, minor, revision, codename = love.getVersion()
-local color = love.graphics.setColor
-_G["love"]["graphics"]["setColor"] = function(r, g, b, a)
-
-  if type(r) == "table" then r, g, b, a = unpack(r) end
-
-  a = a or 1
-  if r <= 1 and g <= 1 and b <= 1 and a <= 1 then
-    if major >= 11 then
-      color(r, g, b, a)
-    else
-      color(255 * r, 255 * g, 255 * b, 255 * a)
-    end
-  else
-    if major >= 11 then
-      color(r/255, g/255, b/255, a/255)
-    else
-      color(r, g, b, a)
-    end
-  end
-
-end
